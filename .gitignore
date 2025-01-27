@@ -6,3 +6,4 @@ lab1/terraform.tfstate.backup
 lab1/tfplan
 lab1/tfplan.json
 lab1/terraform.tfvars
+lab1/Autograder/test.py
