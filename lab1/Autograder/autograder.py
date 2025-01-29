@@ -16,7 +16,7 @@ def verify_terraform_setup(data):
     terraform_outputs = {
         "status": "failure"
     }
-
+    tfvars = {}
     try:
         # Destroy any existing Terraform infrastructure
         subprocess.run(["terraform", "destroy", "-auto-approve"], check=True)
@@ -45,8 +45,24 @@ def verify_terraform_setup(data):
                 "instance_id": outputs["instance_id"]["value"],
                 "public_ip": outputs["public-ip-address"]["value"],
                 "security_group_id": outputs["securitygroup"]["value"],
-                "status": "success"
+                "status": "failure"
             }
+
+            # Load expected values from terraform.tfvars
+            with open("terraform.tfvars", 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        tfvars[key.strip()] = value.strip().strip('"')
+            required_keys = ["vpc_id_value", "instance_type_value", "ami_id_value", "access_key_value", "secret_key_value", "region_value"]
+            if all(key in tfvars for key in required_keys):
+                result["status"] = "success"
+                result["score"] = 1
+                result["message"] = "Terraform setup completed successfully."
+                terraform_outputs["status"] = "success"
+            else:
+                result["message"] = "Terraform input variables are incomplete or missing required keys."            
         else:
             result["message"] = "Terraform outputs are incomplete or missing required keys."
 
@@ -56,7 +72,7 @@ def verify_terraform_setup(data):
         result["message"] = f"An error occurred during Terraform setup: {e}"
 
     data.append(result)
-    return terraform_outputs
+    return terraform_outputs, tfvars
 
 
 def verify_ec2_instance(instance_id, public_ip, expected_security_id, expected_ami_id, expected_instance_type, ec2_client, data):
@@ -89,7 +105,7 @@ def verify_ec2_instance(instance_id, public_ip, expected_security_id, expected_a
             data.append(result)
             return
         # Check if the instance type matches the expected instance type
-        if instance['InstanceType'] != expected_instance_type:
+        if instance['InstanceType'] != expected_instance_type or instance['InstanceType'] != "t2.micro":
             result['message'] = "Instance type does not match the expected instance type. "
             data.append(result)
             return
@@ -156,7 +172,7 @@ def main():
     data = []
 
 # Step 1: Verify Terraform setup
-    terraform_result = verify_terraform_setup(data)
+    terraform_result, tfvars = verify_terraform_setup(data)
     terraform_success = terraform_result["status"] == "success"
 
     if terraform_success:
@@ -165,16 +181,6 @@ def main():
         public_ip = terraform_result["public_ip"]
         security_group_id = terraform_result["security_group_id"]
 
-        # Step 3: Load expected values from terraform.tfvars
-        tfvars = {}
-        with open("terraform.tfvars", 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    tfvars[key.strip()] = value.strip().strip('"')
-
-        expected_vpc_id = tfvars.get("vpc_id_value")
         ec2_client = boto3.client(
             'ec2',
             aws_access_key_id=tfvars.get("access_key_value"),
@@ -182,7 +188,7 @@ def main():
             region_name=tfvars.get("region_value")
         )
         # Step 4: Verify security group
-        verify_security_group(security_group_id, expected_vpc_id, ec2_client, data)
+        verify_security_group(security_group_id, tfvars.get("vpc_id_value"), ec2_client, data)
 
         # Step 5: Verify EC2 instance
         verify_ec2_instance(instance_id, public_ip, security_group_id , tfvars.get("ami_id_value"), tfvars.get("instance_type_value"), ec2_client, data)

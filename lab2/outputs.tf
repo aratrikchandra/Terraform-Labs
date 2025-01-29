@@ -11,10 +11,10 @@ output "private_subnet_id" {
   value = aws_subnet.private_subnet.id
 }
 
-output "internet_gateway_id" {
+output "igw_id" {
   value = aws_internet_gateway.my_igw.id
 }
 
-output "public_route_table_id" {
+output "route_table_id" {
   value = aws_route_table.public_rt.id
 }
