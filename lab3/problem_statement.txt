@@ -67,8 +67,8 @@ Update **eks_node_group.tf** file to:
 1. Define a node group named `pc-node-group` with:  
    - Instance type: `t2.small`  
    - Use arn of aws_iam_role.worker as node role arn
-   - Disk size: 20GB  
-   - Capacity type should be "ON_DEMAND"
+   - Disk size: 20GB (recommended) 
+   - Capacity type should be "ON_DEMAND" (recommended)
    - Desired capacity: 2 nodes, min: 1, max: 3.  
    - Subnets: Use the two public subnets.  
    - Labels: `env = "dev"`.  

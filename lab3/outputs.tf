@@ -18,11 +18,14 @@ output "public_subnet_2_id" {
 }
 
 # Internet Gateway Details
-output "internet_gateway_id" {
+output "igw_id" {
   description = "The ID of the Internet Gateway"
   value       = aws_internet_gateway.gw.id
 }
 
+output "route_table_id" {
+  value = aws_route_table.rtb.id
+}
 # Security Group Details
 output "security_group_id" {
   description = "The ID of the security group"

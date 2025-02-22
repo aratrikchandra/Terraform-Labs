@@ -8,7 +8,6 @@ resource "aws_instance" "kubectl-server" {
   tags = {
     Name = "kubectl"
   }
-
 }
 
 resource "aws_eks_node_group" "node-grp" {
