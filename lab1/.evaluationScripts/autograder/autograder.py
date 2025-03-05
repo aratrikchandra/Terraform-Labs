@@ -18,11 +18,12 @@ def verify_terraform_setup(data):
     }
     tfvars = {}
     try:
+        # Initialize and apply Terraform
+        subprocess.run(["terraform", "init"], check=True)
+
         # Destroy any existing Terraform infrastructure
         subprocess.run(["terraform", "destroy", "-auto-approve"], check=True)
 
-        # Initialize and apply Terraform
-        subprocess.run(["terraform", "init"], check=True)
         subprocess.run(["terraform", "apply", "-auto-approve"], check=True)
 
         # Parse the Terraform state file
@@ -213,7 +214,7 @@ def main():
 
     # Save the result to evaluate.json
     overall['data'] = data
-    with open(os.path.join(labDirectoryPath, '../evaluate.json'), 'w') as f:
+    with open('../evaluate.json', 'w') as f:
         json.dump(overall, f, indent=4)
 
 if __name__ == "__main__":

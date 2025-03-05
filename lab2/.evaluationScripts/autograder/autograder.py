@@ -17,8 +17,10 @@ def verify_terraform_setup(data):
     }
     tfvars = {}
     try:
-        subprocess.run(["terraform", "destroy", "-auto-approve"], check=True)
         subprocess.run(["terraform", "init"], check=True)
+        
+        subprocess.run(["terraform", "destroy", "-auto-approve"], check=True)
+        
         subprocess.run(["terraform", "apply", "-auto-approve"], check=True)
 
         state_file_path = "terraform.tfstate"
@@ -252,7 +254,6 @@ def verify_route_table(route_table_id, expected_vpc_id, expected_igw_id, ec2_cli
 
 def main():
     # labDirectoryPath = "/home/labDirectory/"
-    labDirectoryPath = ""
 
     default_vpc = {
         "testid": "VPC Verification",
@@ -340,7 +341,7 @@ def main():
         data.append(default_route_table)
     
     overall['data'] = data
-    with open(os.path.join(labDirectoryPath, '../evaluate.json'), 'w') as f:
+    with open('../evaluate.json', 'w') as f:
         json.dump(overall, f, indent=4)
 
 if __name__ == "__main__":
